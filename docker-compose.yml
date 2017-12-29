@@ -7,13 +7,8 @@ services:
       context: elasticsearch/
     volumes:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-    ports:
-      - "9200:9200"
-      - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - elk
 
   logstash:
     build:
@@ -25,8 +20,6 @@ services:
       - "5000:5000"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - elk
     depends_on:
       - elasticsearch
 
@@ -35,14 +28,15 @@ services:
       context: kibana/
     volumes:
       - ./kibana/config/:/usr/share/kibana/config:ro
-    ports:
-      - "5601:5601"
-    networks:
-      - elk
     depends_on:
       - elasticsearch
 
-networks:
-
-  elk:
-    driver: bridge
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/config:/etc/nginx/conf.d:ro,Z
+      - ./nginx/htpasswd.users:/etc/nginx/htpasswd.users:ro,Z
+    ports:
+      - "5601:5601"
+    depends_on:
+      - kibana
